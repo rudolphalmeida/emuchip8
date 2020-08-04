@@ -13,6 +13,7 @@ std::vector<uint8_t> load_chip8_rom(const char* filename);
 int main() {
     const int WIDTH = 64;
     const int HEIGHT = 32;
+    const int SCALE_FACTOR = 6;
 
     // Graphics Initialization
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -20,8 +21,8 @@ int main() {
         return 1;
     }
 
-    SDL_Window* window =
-        SDL_CreateWindow("Chip-8 Emulator", 100, 100, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Chip-8 Emulator", 100, 100, WIDTH * SCALE_FACTOR,
+                                          HEIGHT * SCALE_FACTOR, SDL_WINDOW_SHOWN);
     if (window == nullptr) {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << "\n";
         SDL_Quit();
@@ -48,20 +49,22 @@ int main() {
     SDL_Event event;
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
                                              SDL_TEXTUREACCESS_STATIC, WIDTH, HEIGHT);
-    auto* pixels = new uint32_t[WIDTH * HEIGHT];
 
+    auto* pixels = new uint32_t[WIDTH * HEIGHT];
     memset(pixels, 0, WIDTH * HEIGHT * sizeof(uint32_t));
 
     // Render Loop Goes Here
     while (!quit) {
         SDL_UpdateTexture(texture, nullptr, pixels, WIDTH * sizeof(uint32_t));
 
+        // Events
         SDL_WaitEvent(&event);
         if (event.type == SDL_QUIT) {
             quit = true;
             continue;
         }
 
+        // Perform one cycle of CHIP-8 per frame
         chip8.cycle();
 
         if (chip8.draw) {
@@ -69,10 +72,12 @@ int main() {
         }
 
         SDL_RenderClear(renderer);
+        // Will scale the texture automatically to fit window
         SDL_RenderCopy(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
     }
 
+    // Cleanup
     delete[] pixels;
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);

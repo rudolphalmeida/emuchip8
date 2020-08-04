@@ -289,6 +289,7 @@ void Chip8Interpreter::cycle() {
 }
 
 void Chip8Interpreter::load(const std::vector<uint8_t>& buffer) {
+    // Load program at 0x200
     for (size_t i = 0; i < buffer.size(); i++) {
         memory[i + 0x200] = buffer[i];
     }
@@ -299,6 +300,7 @@ void Chip8Interpreter::load(const std::vector<uint8_t>& buffer) {
 void Chip8Interpreter::update_pixels(uint32_t* pixels) {
     for (int w = 0; w < 64; ++w) {
         for (int h = 0; h < 32; ++h) {
+            // Set to all 1 if corresponding gfx is true else 0
             pixels[h * 64 + w] = gfx[h * 64 + w] ? ~0 : 0;
         }
     }

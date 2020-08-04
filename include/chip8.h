@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <stack>
 
 class Chip8Interpreter {
    private:
@@ -23,8 +24,7 @@ class Chip8Interpreter {
     uint8_t delay_timer;
     uint8_t sound_timer;
 
-    uint16_t stack[16];
-    uint16_t sp;  // Stack pointer
+    std::stack<uint16_t> stack;
 
     bool key[16];  // Key states 0-F
 
@@ -48,6 +48,5 @@ class Chip8Interpreter {
 
     void clearScreen();
 
-    [[nodiscard]] const bool* getGraphics() const;
     void update_pixels(uint32_t* p_int);
 };

@@ -6,7 +6,7 @@
 
 #include <chip8.h>
 
-void unknown_instruction_handler();
+void unknown_instruction_handler(uint16_t);
 
 unsigned char chip8_fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
@@ -34,11 +34,10 @@ void Chip8Interpreter::initialize() {
     // Reset registers
     opcode = 0;
     I = 0;
-    sp = 0;
 
     // Clear stack
-    for (uint16_t& i : stack) {
-        i = 0;
+    while (!stack.empty()) {
+        stack.pop();
     }
 
     clearScreen();
@@ -76,6 +75,8 @@ void Chip8Interpreter::cycle() {
     // For the handful of instructions that skip updating the PC
     bool updatePC = true;
 
+    draw = false;
+
     // Fetch opcode
     opcode = memory[pc] << 8 | memory[pc + 1];
 
@@ -94,27 +95,151 @@ void Chip8Interpreter::cycle() {
                 // Screen Clear
                 case 0x00E0: {
                     clearScreen();
+                    draw = true;
+
+                    break;
+                }
+                case 0x00EE: {
+                    pc = stack.top();  // Return from co-routine
+                    stack.pop();
+
                     break;
                 }
                 default: {
-                    unknown_instruction_handler();
+                    unknown_instruction_handler(opcode);
                     break;
                 }
             }
 
             break;
         }
-        case 0x1000: {
+        case 0x1000: {  // Jump to NNN
             pc = NNN;
             updatePC = false;
             break;
         }
-        case 0x6000: {
+        case 0x2000: {
+            stack.push(pc);  // Push current PC to stack and jump to NNN
+            pc = NNN;
+            updatePC = false;
+            break;
+        }
+        case 0x3000: {  // Jump if equal (VX and NN)
+            if (NN == V[X]) {
+                pc += 2;  // Effective increment of 4 after switch
+            }
+
+            break;
+        }
+        case 0x4000: {  // Jump if not equal (VX and NN)
+            if (NN != V[X]) {
+                pc += 2;  // Effective increment of 4 after switch
+            }
+
+            break;
+        }
+        case 0x5000: {  // Jump if VX and VY are equal
+            if (V[X] == V[Y]) {
+                pc += 2;  // Effective increment of 4 after switch
+            }
+
+            break;
+        }
+        case 0x6000: {  // Set VX to NN
             V[X] = NN;
             break;
         }
-        case 0xA000: {
+        case 0x7000: {  // Add NN to VX
+            V[X] += NN;
+            break;
+        }
+        case 0x8000: {               // Arithmetic and Logical instructions
+            switch (opcode & 0xF) {  // Based on last nibble
+                case 0x0: {          // Set
+                    V[X] = V[Y];
+                    break;
+                }
+                case 0x1: {  // Logical OR
+                    V[X] |= V[Y];
+                    break;
+                }
+                case 0x2: {  // Logical AND
+                    V[X] &= V[Y];
+                    break;
+                }
+                case 0x3: {  // Logical XOR
+                    V[X] ^= V[Y];
+                    break;
+                }
+                case 0x4: {  // Add
+                    int sum = V[X] + V[Y];
+                    if (sum > 255) {  // Overflow. Carry must be set
+                        V[X] = 255;
+                        V[15] = 1;  // Set carry flag VF
+                    } else {        // No overflow
+                        V[X] = sum;
+                        V[15] = 0;  // Reset carry flag VF
+                    }
+
+                    break;
+                }
+                case 0x5: {             // Subtract VY from VX and set to VX
+                    if (V[X] > V[Y]) {  // Carry flag should be set
+                        V[X] -= V[Y];
+                        V[15] = 1;  // Set carry flag VF
+                    } else {
+                        V[X] -= V[Y];
+                        V[15] = 0;  // Reset carry flag VF
+                    }
+
+                    break;
+                }
+                case 0x7: {             // Subtract VX from VY and set to VX
+                    if (V[Y] > V[X]) {  // Carry flag should be set
+                        V[X] = V[Y] - V[X];
+                        V[15] = 1;  // Set carry flag VF
+                    } else {
+                        V[X] = V[Y] - V[X];
+                        V[15] = 0;  // Reset carry flag VF
+                    }
+
+                    break;
+                }
+                case 0x6: {  // Shift right
+                    V[X] = V[Y];
+                    V[15] = V[X] & 0b00000001;  // The bit that will be shifted out
+                    V[X] >>= 1;
+
+                    break;
+                }
+                case 0xE: {  // Shift left
+                    V[X] = V[Y];
+                    V[15] = V[X] & 0b10000000;  // The bit that will be shifted out
+                    V[X] <<= 1;
+                }
+                default: {
+                    unknown_instruction_handler(opcode);
+                    break;
+                }
+            }
+
+            break;
+        }
+        case 0x9000: {  // Jump if VX and VY are not equal
+            if (V[X] != V[Y]) {
+                pc += 2;  // Effective increment of 4 after switch
+            }
+
+            break;
+        }
+        case 0xA000: {  // Set index register
             I = NNN;
+            break;
+        }
+        case 0xB000: {        // Jump with offset
+            pc = NNN + V[0];  // Different in CHIP-48 and SUPER-CHIP
+            updatePC = false;
+
             break;
         }
         case 0xD000: {
@@ -141,7 +266,7 @@ void Chip8Interpreter::cycle() {
             break;
         }
         default: {
-            unknown_instruction_handler();
+            unknown_instruction_handler(opcode);
             break;
         }
     }
@@ -179,6 +304,6 @@ void Chip8Interpreter::update_pixels(uint32_t* pixels) {
     }
 }
 
-void unknown_instruction_handler() {
-    std::cerr << "Unknown instruction...\n";
+void unknown_instruction_handler(uint16_t opcode) {
+    std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
 }

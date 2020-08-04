@@ -39,7 +39,7 @@ int main() {
     }
 
     // Load ROM and initialize interpreter
-    auto rom = load_chip8_rom("./roms/airplane.ch8");
+    auto rom = load_chip8_rom("./roms/ibm.ch8");
 
     chip8.initialize();
     chip8.load(rom);
@@ -57,7 +57,6 @@ int main() {
         SDL_UpdateTexture(texture, nullptr, pixels, WIDTH * sizeof(uint32_t));
 
         SDL_WaitEvent(&event);
-
         if (event.type == SDL_QUIT) {
             quit = true;
             continue;

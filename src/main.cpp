@@ -55,8 +55,6 @@ int main() {
 
     // Render Loop Goes Here
     while (!quit) {
-        SDL_UpdateTexture(texture, nullptr, pixels, WIDTH * sizeof(uint32_t));
-
         // Events
         SDL_WaitEvent(&event);
         if (event.type == SDL_QUIT) {
@@ -69,6 +67,7 @@ int main() {
 
         if (chip8.draw) {
             chip8.update_pixels(pixels);
+            SDL_UpdateTexture(texture, nullptr, pixels, WIDTH * sizeof(uint32_t));
         }
 
         SDL_RenderClear(renderer);

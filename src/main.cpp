@@ -56,7 +56,7 @@ int main() {
     // Render Loop Goes Here
     while (!quit) {
         // Events
-        SDL_WaitEvent(&event);
+        SDL_PollEvent(&event);
         if (event.type == SDL_QUIT) {
             quit = true;
             continue;

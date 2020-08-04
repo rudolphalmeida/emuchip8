@@ -100,8 +100,14 @@ void Chip8Interpreter::cycle() {
                     break;
                 }
                 case 0x00EE: {
-                    pc = stack.top();  // Return from co-routine
-                    stack.pop();
+                    if (!stack.empty()) {
+                        pc = stack.top();  // Return from co-routine
+                        stack.pop();
+                    } else {
+                        std::cerr << "Stack underflow due to " << std::hex << opcode << std::dec
+                                  << std::endl;
+                        std::exit(-1);
+                    }
 
                     break;
                 }

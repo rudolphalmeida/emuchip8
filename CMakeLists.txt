@@ -3,8 +3,8 @@ project(emuchip8)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(INCLUDE_FILES include/chip8.h)
-set(SRC_FILES src/chip8.cpp)
+set(INCLUDE_FILES include/chip8.h include/chip8app.h)
+set(SRC_FILES src/chip8.cpp src/chip8app.cpp)
 
 find_package(SDL2 CONFIG REQUIRED)
 

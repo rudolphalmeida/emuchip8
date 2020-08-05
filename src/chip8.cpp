@@ -2,6 +2,7 @@
 // Created by Rudolph Almeida on 26/7/20.
 //
 
+#include <cstdlib>  // For rand()
 #include <iostream>
 
 #include <chip8.h>
@@ -76,6 +77,10 @@ void Chip8Interpreter::cycle() {
     bool updatePC = true;
 
     draw = false;
+    // Clear keyboard
+    for (bool& k : key) {
+        k = false;
+    }
 
     // Fetch opcode
     opcode = memory[pc] << 8 | memory[pc + 1];
@@ -248,6 +253,10 @@ void Chip8Interpreter::cycle() {
 
             break;
         }
+        case 0xC000: {
+            V[X] = std::rand() & NN;
+            break;
+        }
         case 0xD000: {
             uint8_t x = V[X] & 0x3F;
             uint8_t y = V[Y] & 0x1F;
@@ -271,6 +280,107 @@ void Chip8Interpreter::cycle() {
             draw = true;
             break;
         }
+        case 0xE000: {
+            switch (opcode & 0xFF) {
+                case 0x9E: {
+                    if (key[V[X]]) {
+                        pc += 2;  // Effective increment of 4 after switch
+                    }
+                    break;
+                }
+                case 0xA1: {
+                    if (!key[V[X]]) {
+                        pc += 2;  // Effective increment of 4 after switch
+                    }
+                    break;
+                }
+                default: {
+                    unknown_instruction_handler(opcode);
+                    break;
+                }
+            }
+
+            break;
+        }
+        case 0xF000: {
+            switch (opcode & 0xFF) {
+                case 0x07: {
+                    V[X] = delay_timer;
+                    break;
+                }
+                case 0x15: {
+                    delay_timer = V[X];
+                    break;
+                }
+                case 0x18: {
+                    sound_timer = V[X];
+                    break;
+                }
+                case 0x1E: {
+                    int sum = I + V[X];
+                    if (sum > 0xFFF) {
+                        V[15] = 1;
+                    }
+                }
+                case 0x0A: {  // Get key
+                    for (size_t i = 0; i < 16; ++i) {
+                        if (key[i]) {
+                            V[X] = i;
+                            break;
+                        }
+
+                        if (!key[i] && i == 15) {  // No key was pressed
+                            pc -= 2;               // Effective increment of 0 after switch
+                        }
+                    }
+                    break;
+                }
+                case 0x29: {  // Font character
+                    I = 0x50 + V[X] * 5;
+                    break;
+                }
+                case 0x33: {  // Binary-coded decimal conversion
+                    /*
+                     * It takes the number in VX (which is one byte, so it can
+                     * be any number from 0 to 255) and converts it to three
+                     * decimal digits, storing these digits in memory at the
+                     * address in the index register I. For example, if VX
+                     * contains 156 (or 9C in hexadecimal), it would put the
+                     * number 1 at the address in I, 5 in address I + 1, and 6
+                     * in address I + 2
+                     * */
+                    auto number = V[X];
+                    memory[I + 2] = number % 10;
+                    number /= 10;
+
+                    memory[I + 1] = number % 10;
+                    number /= 10;
+
+                    memory[I] = number % 10;
+
+                    break;
+                }
+                // TODO: Introduce toggle for this instruction behaviours
+                case 0x55: {  // Store memory - Modern behaviour
+                    for (size_t i = 0; i < X + 1; ++i) {
+                        memory[I + i] = V[i];
+                    }
+                    break;
+                }
+                case 0x65: {  // Load memory - Modern behaviour
+                    for (size_t i = 0; i < X + 1; ++i) {
+                        V[i] = memory[I + i];
+                    }
+                    break;
+                }
+                default: {
+                    unknown_instruction_handler(opcode);
+                    break;
+                }
+            }
+
+            break;
+        }
         default: {
             unknown_instruction_handler(opcode);
             break;
@@ -287,7 +397,7 @@ void Chip8Interpreter::cycle() {
     }
 
     if (sound_timer > 0) {
-        if (sound_timer == 1) {  // Just print and terminal beep
+        if (sound_timer > 0) {  // Just print and terminal beep
             std::cerr << "Beep!\a\n";
         }
         --sound_timer;
@@ -303,13 +413,17 @@ void Chip8Interpreter::load(const std::vector<uint8_t>& buffer) {
     programLoaded = true;
 }
 
-void Chip8Interpreter::update_pixels(uint32_t* pixels) {
+void Chip8Interpreter::update_pixels(uint32_t* pixels) const {
     for (int w = 0; w < 64; ++w) {
         for (int h = 0; h < 32; ++h) {
             // Set to all 1 if corresponding gfx is true else 0
             pixels[h * 64 + w] = gfx[h * 64 + w] ? ~0 : 0;
         }
     }
+}
+
+bool* Chip8Interpreter::get_key_state() {
+    return key;
 }
 
 void unknown_instruction_handler(uint16_t opcode) {

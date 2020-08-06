@@ -9,7 +9,7 @@
 
 void unknown_instruction_handler(uint16_t);
 
-unsigned char chip8_fontset[80] = {
+uint8_t chip8_fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
     0x20, 0x60, 0x20, 0x20, 0x70,  // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0,  // 2
@@ -53,10 +53,8 @@ void Chip8Interpreter::initialize() {
         k = false;
     }
 
-    // Load fontset at 0x50
-    for (size_t i = 0; i < 80; i++) {
-        memory[i + 0x50] = chip8_fontset[i];
-    }
+    // Load fontset at 0x50=
+    std::memcpy(memory + 0x50, chip8_fontset, 80);
 
     programLoaded = false;
 }
@@ -97,16 +95,15 @@ void Chip8Interpreter::cycle() {
     switch (opcode & 0xF000) {
         case 0x0000: {
             switch (opcode & 0x0FFF) {
-                // Screen Clear
-                case 0x00E0: {
+                case 0x00E0: {  // Clear screen
                     clearScreen();
                     draw = true;
 
                     break;
                 }
-                case 0x00EE: {
+                case 0x00EE: {  // Return from a subroutine
                     if (!stack.empty()) {
-                        pc = stack.top();  // Return from co-routine
+                        pc = stack.top();
                         stack.pop();
                     } else {
                         std::cerr << "Stack underflow due to " << std::hex << opcode << std::dec
@@ -129,7 +126,7 @@ void Chip8Interpreter::cycle() {
             updatePC = false;
             break;
         }
-        case 0x2000: {
+        case 0x2000: {       // Call a subroutine
             stack.push(pc);  // Push current PC to stack and jump to NNN
             pc = NNN;
             updatePC = false;
@@ -166,26 +163,26 @@ void Chip8Interpreter::cycle() {
         }
         case 0x8000: {               // Arithmetic and Logical instructions
             switch (opcode & 0xF) {  // Based on last nibble
-                case 0x0: {          // Set
+                case 0x0: {          // Set value of VY to VX
                     V[X] = V[Y];
                     break;
                 }
-                case 0x1: {  // Logical OR
+                case 0x1: {  // Logical OR of VX and VY
                     V[X] |= V[Y];
                     break;
                 }
-                case 0x2: {  // Logical AND
+                case 0x2: {  // Logical AND of VX and VY
                     V[X] &= V[Y];
                     break;
                 }
-                case 0x3: {  // Logical XOR
+                case 0x3: {  // Logical XOR of VX and VY
                     V[X] ^= V[Y];
                     break;
                 }
-                case 0x4: {  // Add
+                case 0x4: {  // Add VX and VY
                     int sum = V[X] + V[Y];
                     if (sum > 255) {  // Overflow. Carry must be set
-                        V[X] = 255;
+                        V[X] = sum & 0xFF;
                         V[15] = 1;  // Set carry flag VF
                     } else {        // No overflow
                         V[X] = sum;
@@ -227,6 +224,8 @@ void Chip8Interpreter::cycle() {
                     V[X] = V[Y];
                     V[15] = V[X] & 0b10000000;  // The bit that will be shifted out
                     V[X] <<= 1;
+
+                    break;
                 }
                 default: {
                     unknown_instruction_handler(opcode);
@@ -321,6 +320,8 @@ void Chip8Interpreter::cycle() {
                     if (sum > 0xFFF) {
                         V[15] = 1;
                     }
+                    I = sum;
+                    break;
                 }
                 case 0x0A: {  // Get key
                     for (size_t i = 0; i < 16; ++i) {

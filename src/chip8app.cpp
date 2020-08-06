@@ -2,6 +2,7 @@
 // Created by Rudolph Almeida on 5/8/20.
 //
 
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -13,6 +14,8 @@ Chip8App::Chip8App(int argc, char** argv) {
         std::cerr << "Usage: emuchip8 <rom file>" << std::endl;
         std::exit(-1);
     }
+
+    std::srand(std::time(nullptr));
 
     rom_filename = argv[1];
     rom = read_rom(rom_filename);

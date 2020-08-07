@@ -7,8 +7,6 @@
 
 #include <chip8.h>
 
-void unknown_instruction_handler(uint16_t);
-
 uint8_t chip8_fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
     0x20, 0x60, 0x20, 0x20, 0x70,  // 1
@@ -110,7 +108,7 @@ void Chip8Interpreter::cycle() {
                     break;
                 }
                 default: {
-                    unknown_instruction_handler(opcode);
+                    std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
                     break;
                 }
             }
@@ -222,7 +220,7 @@ void Chip8Interpreter::cycle() {
                     break;
                 }
                 default: {
-                    unknown_instruction_handler(opcode);
+                    std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
                     break;
                 }
             }
@@ -288,7 +286,7 @@ void Chip8Interpreter::cycle() {
                     break;
                 }
                 default: {
-                    unknown_instruction_handler(opcode);
+                    std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
                     break;
                 }
             }
@@ -369,7 +367,7 @@ void Chip8Interpreter::cycle() {
                     break;
                 }
                 default: {
-                    unknown_instruction_handler(opcode);
+                    std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
                     break;
                 }
             }
@@ -377,7 +375,7 @@ void Chip8Interpreter::cycle() {
             break;
         }
         default: {
-            unknown_instruction_handler(opcode);
+            std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
             break;
         }
     }
@@ -419,8 +417,4 @@ void Chip8Interpreter::update_pixels(uint32_t* pixels) const {
 
 bool* Chip8Interpreter::get_key_state() {
     return key;
-}
-
-void unknown_instruction_handler(uint16_t opcode) {
-    std::cerr << "Unknown instruction: " << std::hex << opcode << std::dec << "\n";
 }

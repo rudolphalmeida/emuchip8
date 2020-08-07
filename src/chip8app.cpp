@@ -87,54 +87,22 @@ void Chip8App::run() {
              * |A|S|D|F|  ->  |7|8|9|E|
              * |Z|X|C|V|  ->  |A|0|B|F|
              * */
-            if (keyboard_state[SDL_SCANCODE_1]) {
-                key_state[1] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_2]) {
-                key_state[2] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_3]) {
-                key_state[3] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_4]) {
-                key_state[12] = true;  // C
-            }
-            if (keyboard_state[SDL_SCANCODE_Q]) {
-                key_state[4] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_W]) {
-                key_state[5] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_E]) {
-                key_state[6] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_R]) {
-                key_state[13] = true;  // D
-            }
-            if (keyboard_state[SDL_SCANCODE_A]) {
-                key_state[7] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_S]) {
-                key_state[8] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_D]) {
-                key_state[9] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_F]) {
-                key_state[14] = true;  // E
-            }
-            if (keyboard_state[SDL_SCANCODE_Z]) {
-                key_state[10] = true;  // A
-            }
-            if (keyboard_state[SDL_SCANCODE_X]) {
-                key_state[0] = true;
-            }
-            if (keyboard_state[SDL_SCANCODE_C]) {
-                key_state[11] = true;  // B
-            }
-            if (keyboard_state[SDL_SCANCODE_V]) {
-                key_state[15] = true;  // F
-            }
+            key_state[1] = keyboard_state[SDL_SCANCODE_1] != 0;
+            key_state[2] = keyboard_state[SDL_SCANCODE_2] != 0;
+            key_state[3] = keyboard_state[SDL_SCANCODE_3] != 0;
+            key_state[12] = keyboard_state[SDL_SCANCODE_4] != 0;
+            key_state[4] = keyboard_state[SDL_SCANCODE_Q] != 0;
+            key_state[5] = keyboard_state[SDL_SCANCODE_W] != 0;
+            key_state[6] = keyboard_state[SDL_SCANCODE_E] != 0;
+            key_state[13] = keyboard_state[SDL_SCANCODE_R] != 0;
+            key_state[7] = keyboard_state[SDL_SCANCODE_A] != 0;
+            key_state[8] = keyboard_state[SDL_SCANCODE_S] != 0;
+            key_state[9] = keyboard_state[SDL_SCANCODE_D] != 0;
+            key_state[14] = keyboard_state[SDL_SCANCODE_F] != 0;
+            key_state[10] = keyboard_state[SDL_SCANCODE_Z] != 0;
+            key_state[0] = keyboard_state[SDL_SCANCODE_X] != 0;
+            key_state[11] = keyboard_state[SDL_SCANCODE_C] != 0;
+            key_state[15] = keyboard_state[SDL_SCANCODE_V] != 0;
         }
 
         // Perform one cycle of CHIP-8 per frame

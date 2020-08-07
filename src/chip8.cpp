@@ -75,10 +75,6 @@ void Chip8Interpreter::cycle() {
     bool updatePC = true;
 
     draw = false;
-    // Clear keyboard
-    for (bool& k : key) {
-        k = false;
-    }
 
     // Fetch opcode
     opcode = memory[pc] << 8 | memory[pc + 1];

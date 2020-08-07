@@ -209,16 +209,14 @@ void Chip8Interpreter::cycle() {
 
                     break;
                 }
-                case 0x6: {  // Shift right
-                    V[X] = V[Y];
-                    V[15] = V[X] & 0b00000001;  // The bit that will be shifted out
+                case 0x6: {                            // Shift right
+                    V[15] = (V[X] & 0b00000001) != 0;  // The bit that will be shifted out
                     V[X] >>= 1;
 
                     break;
                 }
-                case 0xE: {  // Shift left
-                    V[X] = V[Y];
-                    V[15] = V[X] & 0b10000000;  // The bit that will be shifted out
+                case 0xE: {                            // Shift left
+                    V[15] = (V[X] & 0b10000000) != 0;  // The bit that will be shifted out
                     V[X] <<= 1;
 
                     break;
